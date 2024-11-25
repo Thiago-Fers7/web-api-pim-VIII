@@ -27,6 +27,7 @@ namespace Web_API.Controllers
 
             var playlist = await _context.Playlists
                 .FirstOrDefaultAsync(m => m.Id == id);
+
             if (playlist == null)
             {
                 return NotFound();
@@ -35,7 +36,6 @@ namespace Web_API.Controllers
             return Ok(playlist);
         }
 
-        // criar nova rota
         [Route("user/{userId}")]
         [HttpGet]
         public async Task<ActionResult<Playlist>> GetPlaylistByUser(int? userId)
@@ -68,6 +68,34 @@ namespace Web_API.Controllers
             }
 
             return BadRequest(ModelState);
+        }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdatePlaylist(int id, [FromBody] Playlist updatedPlaylist)
+        {
+            if (id != updatedPlaylist.Id)
+            {
+                return BadRequest("O ID da playlist na rota não corresponde ao ID no corpo da solicitação.");
+            }
+
+            var existingPlaylist = await _context.Playlists.FindAsync(id);
+            if (existingPlaylist == null)
+            {
+                return NotFound($"A playlist com ID {id} não foi encontrada.");
+            }
+
+            existingPlaylist.Nome = updatedPlaylist.Nome;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+
+                return Ok(existingPlaylist);
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
         }
 
         [HttpDelete("{id}")]
